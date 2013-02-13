@@ -12,7 +12,8 @@ var mimeTypes = {
   '.jpeg' : 'image/jpeg',
   '.jpg' : 'image/jpg',
   '.gif' : 'image/gif',
-  '.css' : 'text/css'
+  '.css' : 'text/css',
+  '.ico' : 'image/x-icon'
 };
 
 function requestHandler(req, res) {

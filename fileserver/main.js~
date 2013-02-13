@@ -17,7 +17,7 @@ var mimeTypes = {
 
 function requestHandler(req, res) {
   var requestedUrl = url.parse(req.url).pathname;
-  if(requestedUrl === '/') requestedUrl = '/index.html';
+  if(requestedUrl === '/') requestedUrl += 'index.html';
   var requestedFile = path.join(webPath, requestedUrl);
   console.log(req.connection.remoteAddress + ' requested file ' + requestedFile);
   fs.exists(requestedFile, function(exists) {
