@@ -1,0 +1,62 @@
+
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  </head>
+  <body>
+  <div id="fb-root"></div>
+  <script src="http://connect.facebook.net/en_US/all.js"></script>
+  <div id="profileImg" style="visibility:hidden"></div>
+  <div id="profileName" style="visibility:hidden"></div>
+  <button id="loginButton" onclick="myLogin()" style="visibility:hidden"> Login w/ FB </button>
+  <script>
+    function myLogin() {
+      FB.login(function(response) {
+        if (response.authResponse) {
+          // logged in
+          FB.api('/me', function(response) { 
+            console.log('Received information for ' + response.name + '.'); 
+          });
+          var profImg = document.createElement("IMG");
+          profImg.src = "http://graph.facebook.com/" + response.userID + "/picture?type=large";
+          document.getElementById("profileName").style.visibility = "visible";
+          document.getElementById("profileImg").appendChild(profImg);
+          document.getElementById("profileName").style.visibility = "visible";
+          document.getElementById("profileImg").style.visibility = "visible";
+        } else {
+          // cancelled login or didnt fully authorize
+          console.log('cancelled login');
+        }
+      });
+    };
+    // Additional JS functions here
+    window.fbAsyncInit = function() {
+      FB.init({
+        appId      : '238333369637105', // App ID
+        channelUrl : '//localhost:5000/channel.html', // Channel File
+        status     : true, // check login status
+        cookie     : true, // enable cookies to allow the server to access the session
+        xfbml      : true  // parse XFBML
+      });
+
+      FB.getLoginStatus(function(response) {
+        if (response.status === 'connected') {
+          // the user is logged in and has authenticated your
+          // app, and response.authResponse supplies
+          // the user's ID, a valid access token, a signed
+          // request, and the time the access token 
+          // and signed request each expire
+          var uid = response.authResponse.userID;
+          var accessToken = response.authResponse.accessToken;
+        } else if (response.status === 'not_authorized') {
+          // the user is logged in to Facebook, 
+          // but has not authenticated your app
+        } else {
+          // the user isn't logged in to Facebook.
+        }
+      });
+    };
+
+  </script>
+  </body>
+</html>
