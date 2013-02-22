@@ -16,13 +16,14 @@
           // logged in
           FB.api('/me', function(response) { 
             console.log('Received information for ' + response.name + '.'); 
+            document.getElementById("profileName").innerHTML = "MY NAME: " + response.name;
+            document.getElementById("profileName").style.visibility = "visible";
           });
           var profImg = document.createElement("IMG");
-          profImg.src = "http://graph.facebook.com/" + response.userID + "/picture?type=large";
-          document.getElementById("profileName").style.visibility = "visible";
+          profImg.src = "http://graph.facebook.com/" + response.authResponse.userID + "/picture?type=large";
           document.getElementById("profileImg").appendChild(profImg);
-          document.getElementById("profileName").style.visibility = "visible";
           document.getElementById("profileImg").style.visibility = "visible";
+          document.getElementById("loginButton").style.visibility = "hidden";
         } else {
           // cancelled login or didnt fully authorize
           console.log('cancelled login');
@@ -41,6 +42,7 @@
 
       FB.getLoginStatus(function(response) {
         if (response.status === 'connected') {
+  console.log('Connected and authorized');
           // the user is logged in and has authenticated your
           // app, and response.authResponse supplies
           // the user's ID, a valid access token, a signed
@@ -48,11 +50,22 @@
           // and signed request each expire
           var uid = response.authResponse.userID;
           var accessToken = response.authResponse.accessToken;
+          var profImg = document.createElement("IMG");
+          profImg.src = "http://graph.facebook.com/" + uid + "/picture?type=large";
+          document.getElementById("profileImg").appendChild(profImg);
+          document.getElementById("profileImg").style.visibility = "visible";
+          FB.api('/me', function(response) { 
+            console.log('Received information for ' + response.name + '.'); 
+            document.getElementById("profileName").innerHTML = "MY NAME: " + response.name;
+            document.getElementById("profileName").style.visibility = "visible";
+          });
         } else if (response.status === 'not_authorized') {
-          // the user is logged in to Facebook, 
-          // but has not authenticated your app
+          console.log('Connected, not authorized');
+          document.getElementById("loginButton").style.visibility = "visible";
         } else {
           // the user isn't logged in to Facebook.
+          console.log('Not Connected');
+          document.getElementById("loginButton").style.visibility = "visible";
         }
       });
     };
