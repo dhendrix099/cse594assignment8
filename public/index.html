@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Tetris</title>
+  <style>
+    html, body, canvas {
+      margin: 0;
+      padding: 0
+    }
+    html, body { 
+      width:100%; 
+      height:100%; 
+      overflow:hidden;
+    }
+    * {
+      cursor: default;
+	    user-select: none;
+      -moz-user-select: none;  
+      -webkit-user-select: none;  
+      -ms-user-select: none;
+	    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    }
+  </style>
+
+  <script type="text/javascript" src ="kibo.js"></script>
+  <script type="text/javascript" src ="Input.js"></script>
+  <script type="text/javascript" src ="Block.js"></script>
+</head>
+<body onload="onLoad()">
+  <center>
+    <table id="myGameTable" class="nonSelectable">
+	<tr>
+	Assignment 5 <br>
+	</tr>
+	<tr valign=TOP>
+      <td>
+	    <canvas id="canvas" width="250" height="450"></canvas>
+	  </td>
+	  <td>
+	    <div>Next Block</div>
+		<canvas id="nextblock" width="75" height="100"></canvas>
+		<div>Swap</div>
+	    <canvas id="swapblock" width="75" height="100"></canvas>
+	    <div>Ticks: </div><div id="count"> </div>
+	    <div>Score: </div><div id="completerows"> </div>
+		<center> <b>Controls</b> <br>
+	  LEFT ARROW KEY(left) <br>
+	  RIGHT ARROW KEY(right) <br>
+	  DOWN ARROW KEY(drop faster) <br>
+	  UP ARROW KEY(rotate) <br>
+	  SPACEBAR(instant drop) <br>
+	  ENTER(swap blocks) <br>
+	  P(quit) <br> </center>
+	  </td>
+	</tr>
+	</table>
+  </center>
+</body>
+  <script type="text/javascript">
+  var width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
+	var height = (window.innerHeight > 0) ? window.innerHeight : screen.height;
+    //var CELL_SIZE = 25;
+	var CELL_SIZE = 0;
+	if((height/19) < (width/14)) { CELL_SIZE = Math.floor(height/19); }
+	else { CELL_SIZE = Math.floor(width/14); }
+	//var CELL_SIZE = width/14;
+    var INTERVAL = 550; // milliseconds
+	var count = 0;  // For testing purposes -- make sure the interval stops on game over/completion -- *****clean me
+	var gameRunning = true;
+	var allowInput = true;
+	var completedRows = 0;
+	var canvas = document.getElementById('canvas');
+	var nextBlockCanvas = document.getElementById('nextblock');
+	var swapBlockCanvas = document.getElementById('swapblock');
+	canvas.style.border = "black 1px solid";
+  nextBlockCanvas.style.border = "black 1px solid";
+	swapBlockCanvas.style.border = "black 1px solid";
+	canvas.width = CELL_SIZE*10;
+	canvas.height = CELL_SIZE*18;
+	nextBlockCanvas.width = CELL_SIZE*3;
+	nextBlockCanvas.height = CELL_SIZE*4;
+	swapBlockCanvas.width = CELL_SIZE*3;
+	swapBlockCanvas.height = CELL_SIZE*4;
+	var ctx = canvas.getContext('2d');
+	var nex = nextBlockCanvas.getContext('2d');  // 3 CELL_SIZE x 4 CELL_SIZE
+	var swa = swapBlockCanvas.getContext('2d');  // 3 CELL_SIZE x 4 CELL_SIZE
+	var imgArray = [];
+	for(var i = 0; i < 7; i++) {
+	  imgArray[i] = new Image();
+	  imgArray[i].src = 'img/' + i + '.png';
+	}
+  var inactiveBlocks = [];
+	var activeBlock = new Block(ctx, Math.floor(Math.random()*7), 5, -1);
+	var nextBlock = new Block(nex, Math.floor(Math.random()*7), 1, 1);
+	var swapBlock = new Block(swa, 0, 1, 1);
+	swapBlock.type = -1;
+    
+    function clearGrid(ctx) {
+      ctx.clearRect(0, 0, 10 * CELL_SIZE, 18 * CELL_SIZE);
+    }
+	
+    function Cell(ctx, type, x, y) {
+      this.x = x;
+      this.y = y;
+	  this.draw = function() { ctx.drawImage(imgArray[type], this.x * CELL_SIZE, this.y * CELL_SIZE, CELL_SIZE, CELL_SIZE); }
+      this.drop = function() { ++this.y; }
+	  this.moveL = function() { --this.x; }
+	  this.moveR = function() { ++this.x; }
+    }
+	
+	// UPDATE: Create/manage new blocks/ swap blocks/ next blocks.
+	function updateGameLogic() {
+      if(activeBlock.canDrop()) { activeBlock.drop(); }
+	  else {
+        inactiveBlocks.push(activeBlock);
+        activeBlock = new Block(ctx, nextBlock.type, 5, -1);
+		nextBlock = new Block(nex, Math.floor(Math.random()*7), 1, 1);
+        if (activeBlock.canDrop() === false) { gameRunning = false; }
+      }  
+	}
+	
+	// RENDER: Draw static/dropped blocks and active block. (RENDER)
+	function render() {
+	  clearGrid(ctx);
+      for (var i = 0; i < inactiveBlocks.length; ++i) { inactiveBlocks[i].draw(); }
+      activeBlock.draw();
+	  nex.clearRect(0, 0, nextBlockCanvas.width, nextBlockCanvas.height);
+	  nextBlock.draw();
+	}
+	
+	function clearBlock(ctx, block) { for(var i = 0; i < block.cells.length; i++) ctx.clearRect(block.cells[i].x * CELL_SIZE, block.cells[i].y * CELL_SIZE, CELL_SIZE, CELL_SIZE); }
+	
+	function swapBlocks() {
+	  clearBlock(ctx, activeBlock);
+	  if(swapBlock.type === -1) {
+	    swapBlock = new Block(swa, activeBlock.type, 1, 1);
+		activeBlock = new Block(ctx, nextBlock.type, activeBlock.x, activeBlock.y);
+	    nextBlock = new Block(nex, Math.floor(Math.random()*7), 1, 1);
+		nex.clearRect(0, 0, nextBlockCanvas.width, nextBlockCanvas.height);
+	    nextBlock.draw();
+	  }
+	  else {
+	    var tempBlock = activeBlock;
+		activeBlock = new Block(ctx, swapBlock.type, activeBlock.x, activeBlock.y);
+		swapBlock = new Block(swa, tempBlock.type, 1, 1);
+	  }
+	  activeBlock.draw();
+	  swa.clearRect(0, 0, swapBlockCanvas.width, swapBlockCanvas.height);
+	  swapBlock.draw();
+	}
+	
+	function updateCompleteRows() {
+	  var rowCells = 0;
+	  for(var k = 17; k >= 0; k--) { // Look for completed rows by summing the occupied cells (rowCells).
+	    for(var i = 0; i < inactiveBlocks.length; i++) {
+	      for(var j = 0; j < inactiveBlocks[i].cells.length; j++) {
+		    if(inactiveBlocks[i].cells[j].y === k) rowCells++;
+	      }
+	    }
+		if(rowCells === 10) { // Delete the row 'k'
+		  for(var z = 0; z < inactiveBlocks.length; z++) {
+			for(var p = inactiveBlocks[z].cells.length - 1; p >= 0; p--) { if(inactiveBlocks[z].cells[p].y === k) inactiveBlocks[z].cells.splice(p,1); }
+		  }
+		  for(var q = 0; q < inactiveBlocks.length; q++) { // Then shift all above rows down
+			for(var l = inactiveBlocks[q].cells.length - 1; l >= 0; l--) { if(inactiveBlocks[q].cells[l].y < k) { inactiveBlocks[q].cells[l].y++; } }
+		  }
+		  completedRows++;
+		  k++;
+		}
+		rowCells = 0;
+	  }
+	  // Look for empty blocks and purge them from the array.
+	  for(var m = inactiveBlocks.length - 1; m > 0; m--) { if(inactiveBlocks[m].cells.length === 0) inactiveBlocks.splice(m,1); }
+	}
+	// The Game Loop
+    activeBlock.draw();	
+	nextBlock.draw()
+	function tetrisLoop() {
+	  allowInput = true;
+	  updateGameLogic();
+	  updateCompleteRows();
+	  render();
+	  count += 1;
+	  document.getElementById('count').innerHTML=count;
+	  document.getElementById('completerows').innerHTML=completedRows; 	
+	  if(completedRows >= 10) {
+	    gameRunning = false;
+		document.getElementById('completerows').innerHTML='YOU WIN!';
+	  }
+	  if(gameRunning) setTimeout("tetrisLoop()", INTERVAL);
+	}
+  //tetrisLoop();
+	//window.onload = tetrisLoop;
+  </script>
+</html>
