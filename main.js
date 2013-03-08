@@ -4,7 +4,7 @@ var http = require('http'),
     url = require('url'),
     path = require('path');
 
-var port = 5000;
+var port = process.env.PORT || 5000;
 var webPath = 'public';
 var mimeTypes = {
   '.js' : 'application/javascript',
@@ -52,6 +52,6 @@ function requestHandler(req, res) {
 
 var server = http.createServer(requestHandler);
 server.listen(port, function() { 
-  console.log('Listening to the port 5000');  
+  console.log('Listening to the port ' + port);  
 });
 
