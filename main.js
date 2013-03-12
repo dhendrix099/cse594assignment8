@@ -4,7 +4,7 @@ var http = require('http'),
     url = require('url'),
     path = require('path');
 
-var port = process.evn.PORT;
+var port = process.env.PORT || 5000;
 var webPath = 'public';
 var mimeTypes = {
   '.js' : 'application/javascript',
