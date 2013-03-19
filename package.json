@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "name": "cse594tetritis",
   "version": "0.0.1",
   "dependencies": {
@@ -7,5 +8,15 @@
   "engines": {
     "node": "0.8.x",
     "npm": "1.1.x"
+=======
+  "name": "tetris",
+  "version": "0.0.1",
+  "dependencies": {
+    "express" : "2.5.1"
+  },
+  "engines": {
+    "node": "0.8.1",
+    "npm": "1.1.1"
+>>>>>>> 34cff420e82ee3771c351a0f8088b70548d0d046
   }
 }

@@ -52,6 +52,10 @@ function requestHandler(req, res) {
 
 var server = http.createServer(requestHandler);
 server.listen(port, function() { 
+<<<<<<< HEAD
   console.log('Listening to the port ' + port);  
+=======
+  console.log('Listening to the port '+ port);  
+>>>>>>> 34cff420e82ee3771c351a0f8088b70548d0d046
 });
 
