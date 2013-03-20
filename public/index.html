@@ -23,10 +23,12 @@
 	    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     }
   </style>
-
+  <div id="fb-root"></div>
+  <script src="http://connect.facebook.net/en_US/all.js"></script>
   <script type="text/javascript" src ="kibo.js"></script>
   <script type="text/javascript" src ="Input.js"></script>
   <script type="text/javascript" src ="Block.js"></script>
+  <script type="text/javascript" src ="jquery-1.8.2.js"></script>
 </head>
 <body onload="onLoad()">
   <center>
@@ -45,19 +47,103 @@
 	    <canvas id="swapblock" width="75" height="100"></canvas>
 	    <div>Ticks: </div><div id="count"> </div>
 	    <div>Score: </div><div id="completerows"> </div>
-		<center> <b>Controls</b> <br>
-	  LEFT ARROW KEY(left) <br>
-	  RIGHT ARROW KEY(right) <br>
-	  DOWN ARROW KEY(drop faster) <br>
-	  UP ARROW KEY(rotate) <br>
-	  SPACEBAR(instant drop) <br>
-	  ENTER(swap blocks) <br>
-	  P(quit) <br> </center>
+		<center>   
+		  <button id="loginButton" onclick="myLogin()" style="visibility:hidden"> Login with Facebook </button>
+		  <div id="profileName" style="visibility:hidden"></div>
+		  <div id="profileImg" style="visibility:hidden"></div>
+		</center>
 	  </td>
 	</tr>
 	</table>
   </center>
 </body>
+  <script>
+    function myLogin() {
+      FB.login(function(response) {
+	console.log("facebook myLogin() called");
+        if (response.authResponse) {
+          // logged in
+          FB.api('/me', function(response) { 
+            console.log('Received information for ' + response.name + '.'); 
+            document.getElementById("profileName").innerHTML = response.name;
+            document.getElementById("profileName").style.visibility = "visible";
+
+		var request = new XMLHttpRequest();
+	    	request.open("GET", "https://api.mongolab.com/api/1/databases/tetritis_scores/collections/users/5148a6a9e4b057c394dca9a9?apiKey=0OEbn_veotjFBQ9cG0y5DydfAinPg_KB");
+		request.onreadystatechange = (function() { 
+			var obj;
+			if(request.readyState == 4) {
+				var result = request.responseText;
+				obj = JSON.parse(result);
+				console.log(obj);
+			}
+		});
+		request.send(null);
+
+
+          });
+          var profImg = document.createElement("IMG");
+          profImg.src = "http://graph.facebook.com/" + response.authResponse.userID + "/picture?type=normal";
+          document.getElementById("profileImg").appendChild(profImg);
+          document.getElementById("profileImg").style.visibility = "visible";
+          document.getElementById("loginButton").style.visibility = "hidden";
+          document.getElementById("logoutButton").style.visibility = "visible";
+        } else {
+          // cancelled login or didnt fully authorize
+          console.log('cancelled login');
+        }
+      });
+    };
+    // Additional JS functions here
+    window.fbAsyncInit = function() {
+	console.log("facebook asyncinit called");
+      FB.init({
+        appId      : '497726653608343', // App ID
+        channelUrl : 'http://localhost:5000/channel.html', // Channel File
+        status     : true, // check login status
+        cookie     : true, // enable cookies to allow the server to access the session
+        xfbml      : true  // parse XFBML
+      });
+  // Load the SDK Asynchronously
+  (function(d){
+     var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement('script'); js.id = id; js.async = true;
+     js.src = "http://connect.facebook.net/en_US/all.js";
+     ref.parentNode.insertBefore(js, ref);
+   }(document));
+
+      FB.getLoginStatus(function(response) {
+	console.log("facebook getloginstatus called");
+        if (response.status === 'connected') {
+  console.log('Connected and authorized');
+          // the user is logged in and has authenticated your
+          // app, and response.authResponse supplies
+          // the user's ID, a valid access token, a signed
+          // request, and the time the access token 
+          // and signed request each expire
+          var uid = response.authResponse.userID;
+          var accessToken = response.authResponse.accessToken;
+          var profImg = document.createElement("IMG");
+          profImg.src = "http://graph.facebook.com/" + uid + "/picture?type=normal";
+          document.getElementById("profileImg").appendChild(profImg);
+          document.getElementById("profileImg").style.visibility = "visible";
+          FB.api('/me', function(response) { 
+            console.log('Received information for ' + response.name + '.'); 
+            document.getElementById("profileName").innerHTML = response.name;
+            document.getElementById("profileName").style.visibility = "visible";
+          });
+        } else if (response.status === 'not_authorized') {
+          console.log('Connected, not authorized');
+          document.getElementById("loginButton").style.visibility = "visible";
+        } else {
+          // the user isn't logged in to Facebook.
+          console.log('Not Connected');
+          document.getElementById("loginButton").style.visibility = "visible";
+        }
+      });
+    };
+  </script>
   <script type="text/javascript">
   var width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
 	var height = (window.innerHeight > 0) ? window.innerHeight : screen.height;
@@ -117,7 +203,10 @@
         inactiveBlocks.push(activeBlock);
         activeBlock = new Block(ctx, nextBlock.type, 5, -1);
 		nextBlock = new Block(nex, Math.floor(Math.random()*7), 1, 1);
-        if (activeBlock.canDrop() === false) { gameRunning = false; }
+        if (activeBlock.canDrop() === false) { 
+		gameRunning = false; 
+		submitScore();
+	}
       }  
 	}
 	
@@ -174,8 +263,24 @@
 	  // Look for empty blocks and purge them from the array.
 	  for(var m = inactiveBlocks.length - 1; m > 0; m--) { if(inactiveBlocks[m].cells.length === 0) inactiveBlocks.splice(m,1); }
 	}
+
+	function submitScore() {
+		var uid;
+		FB.api('/me', function(response) { 
+			var set = {};
+			set[response.id.toString()] = completedRows;
+			$.ajax( { url: "https://api.mongolab.com/api/1/databases/tetritis_scores/collections/users/5148a6a9e4b057c394dca9a9?apiKey=0OEbn_veotjFBQ9cG0y5DydfAinPg_KB",
+        		  data: JSON.stringify( { "$set" : set } ),
+        		  type: "PUT",
+        		  contentType: "application/json" } 
+			);
+		});
+
+
+	}
+
 	// The Game Loop
-    activeBlock.draw();	
+   	activeBlock.draw();	
 	nextBlock.draw()
 	function tetrisLoop() {
 	  allowInput = true;
@@ -185,13 +290,7 @@
 	  count += 1;
 	  document.getElementById('count').innerHTML=count;
 	  document.getElementById('completerows').innerHTML=completedRows; 	
-	  if(completedRows >= 10) {
-	    gameRunning = false;
-		document.getElementById('completerows').innerHTML='YOU WIN!';
-	  }
 	  if(gameRunning) setTimeout("tetrisLoop()", INTERVAL);
 	}
-  //tetrisLoop();
-	//window.onload = tetrisLoop;
   </script>
 </html>

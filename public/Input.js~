@@ -66,6 +66,7 @@ function onLoad() {
     k.down(['space'], inpDrop);
     k.down(['enter'], inpSwap);
   }
+  myLogin();
   tetrisLoop();  // start the game loop
 }
 
